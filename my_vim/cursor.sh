@@ -6,6 +6,7 @@ function MoveCursor {
 # 向上移动光标
 function Up {
     # 需要确定是否超出边界
+    # if 
     (( y=$y-1 ))
     MoveCursor
 }
@@ -38,6 +39,10 @@ cat cursor.sh
 x=0
 # 行数
 y=0
+# 设置文本编辑范围
+screen_x=40
+screen_y=40
+
 MoveCursor
 while [ 1 ]
 do

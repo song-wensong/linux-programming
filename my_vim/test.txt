@@ -2,6 +2,21 @@ hello world
 my name is Song
     5 Welcome to my world!
     In my world,
-you can enjog the fun
+you can enjoy the fun
 hahaha
 goodluck
+
+sed -n '3,3p' test.txt
+gawk '
+BEGIN{FS=""}
+{print $16,NR==3}' test.txt
+
+
+sed -n '3,3p' test.txt
+gawk 'BEGIN{FS=""} {print $16}'
+
+sed -n '$y,$yp' "$1" | gawk 'BEGIN{FS=""} {print $"$x"}'
+
+oh my good!
+
+It's raining
