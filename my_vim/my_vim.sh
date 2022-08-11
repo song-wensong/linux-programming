@@ -64,7 +64,10 @@ function textViewer {
 	sed -n "$text_y_begin,$text_y_end p" "$filename"
 	# echo $text | cat -n
     
-	MoveCursor
+	# 因为有新老光标的交替，如果在每次while循环MoveCusor，会引起错乱
+
+	# MoveCursor
+
 	# case "$state" in
 	# 0)
 	#     # 普通模式，在页面最后一行显示文件名称
@@ -82,6 +85,7 @@ function textViewer {
 # 设定光标位置
 function MoveCursor {
     tput cup $cursor_y $cursor_x
+	# echo $cursor_y$cursor_x
 }
 function PosCursorInText {
 	# 计算光标所在位置在文件中的列数和行数
@@ -90,33 +94,82 @@ function PosCursorInText {
 }
 # 向上移动光标
 function Up {
-    # 需要确定是否超出边界
-    # if 
+	# 光标所在行数大于0才能移动
 	if [ $cursor_y -gt 0 ]
 	then
+	    # 将cursor_x复原
+        cursor_x=$old_cursor_x
+
         (( cursor_y=$cursor_y-1 ))
+		# 计算光标所在位置在文件中的列数和行数
+	    PosCursorInText
+		# 计算光标所在行的字符串长度
+		local line=$(sed -n "$cursor_text_y,$cursor_text_y p" "$filename")
+		local line_len=${#line}
+		# 如果光标所在行的字符串长度小于old_cursor_x（因为左右而修改的光标的左右位置），则将光标移动至
+		# 这里为发现insert模式和普通模式最后位置有所区别，insert模式要多一列，奇葩，... to do
+		# echo "line_len=$line_len"
+		# echo $((old_cursor_x-1))
+		if [ $line_len -le $((old_cursor_x-1)) ]
+		then
+		    (( cursor_x=$line_len )) # 将光标定位至字符串位置末尾
+		fi
 	fi
     MoveCursor
+	# # 将cursor_x复原
+    # cursor_x=$old_cursor_x
 }
 function Down {
-    (( cursor_y=$cursor_y+1 ))
+	# 光标所在行数小于lines才能移动
+	if [ $cursor_y -lt $((text_lines-1)) ]
+	then
+	    # 将cursor_x复原
+        cursor_x=$old_cursor_x
+
+        (( cursor_y=$cursor_y+1 ))
+		# 计算光标所在位置在文件中的列数和行数
+	    PosCursorInText
+		# 计算光标所在行的字符串长度
+		local line=$(sed -n "$cursor_text_y,$cursor_text_y p" "$filename")
+		local line_len=${#line}
+		# 如果光标所在行的字符串长度小于old_cursor_x（因为左右而修改的光标的左右位置），则将光标移动至
+		# 这里为发现insert模式和普通模式最后位置有所区别，insert模式要多一列，奇葩，... to do
+		# echo "line_len=$line_len"
+		# echo $((old_cursor_x-1))
+		if [ $line_len -le $((old_cursor_x-1)) ]
+		then
+		    (( cursor_x=$line_len )) # 将光标定位至字符串位置末尾
+		fi
+	fi
     MoveCursor
+	# # 将cursor_x复原
+    # cursor_x=$old_cursor_x
 }
 function Right {
 	# 计算光标所在位置在文件中的列数和行数
 	PosCursorInText
     # 计算光标所在行的字符串长度
 	local line=$(sed -n "$cursor_text_y,$cursor_text_y p" "$filename")
-
-	# 如果光标小于光标所在行的字符数或者小于文本编辑宽度，则可以向右
-    
-    (( cursor_x=$cursor_x+1 ))
-	old_cursor_x=$cursor_x
+    local line_len=${#line}
+	# 如果光标列数小于光标所在行的字符数或者小于文本编辑宽度，则可以向右
+    if [ $cursor_x -lt $line_len ] && [ $cursor_x -lt $((text_cols-1)) ]
+	then
+	    (( cursor_x=$cursor_x+1 ))
+		old_cursor_x=$cursor_x
+	fi
     MoveCursor
 }
+# 光标向左移动
 function Left {
-    (( cursor_x=$cursor_x-1 ))
-    MoveCursor
+	# 判断光标所在列数是否大于0
+	if [ $cursor_x -gt 0 ]
+	then
+        (( cursor_x=$cursor_x-1 ))
+		# 记录最新的光标列数
+		old_cursor_x=$cursor_x
+    fi
+	# 设定光标位置
+	MoveCursor
 }
 
 function Read {
@@ -230,7 +283,7 @@ do
 	    # 命令模式
 		CommandMode;;
 	esac
-	textViewer "$filename"
+	# textViewer "$filename"# debug
 done
 
 echo "Done"
