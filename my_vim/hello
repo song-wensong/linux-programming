@@ -1,101 +1,104 @@
-#/bin/bash
+jav
 
-# 只读一个字符
-while read -rsn1 k
-do
-	case "$k" in
-	[[:graph:]])
-		# 普通输入处理
-		echo "$k"
-		# echo "normal character"
-		;;
+str="    i"
+echo ${#str}
+
+# # 只读一个字符
+# while read -rsn1 k
+# do
+# 	case "$k" in
+# 	[[:graph:]])
+# 		# 普通输入处理
+# 		echo "$k"
+# 		# echo "normal character"
+# 		;;
 	
-	$'\e')
-		# 再次读取一个字符
-        echo "$k"
-		read -rsn1 k
-		# # read -rsn1 k
-		# 如果为空字符，则return，return的含义？
-		if [ "$k" == "" ]
-		then
-			echo "Esc"
-		fi
-		# # 如果为[则再读取一个字符
-		# [ "$k" == "[" ] && read -rsn1 k
-		# # 如果为O则再读取一个字符，为O的含义？
-		# [ "$k" == "O" ] && read -rsn1 k
-		# # 判断是哪个方向键
-		# case "$k" in
-		# A)
-		# 	# Up
-		# 	echo "up"
-		# 	;;
-		# B)
-		# 	# Down
-		# 	echo "Down"
-		# 	;;
-		# C)
-		# 	# Right
-		# 	echo "Right"
-		# 	;;
-		# D)
-		# 	# Left
-		# 	echo "Left"
-		# 	;;
-		# *)
-		#     echo "Esc"
-		#     ;;
-		# esac
-		# read -rsn4 -t .1
-		;;
-	$'\x09')
-		# Tab处理
-		echo "Tab"
-		;;
-	$'\178')
-		# Tab处理
-		echo "Tab"
-		;;
-	$'\177')
-		# Backspace处理
-		echo "backspace"
-		;;
-	$'\x7f')
-		# Backspace处理
-		echo "backspace"
-		;;
-	$'x1b')
-		# # ESC处理
-		echo "ESC处理"
-		#     read -rsn1 k
-		# 	[ "$k" == "" ] && return
-		# 	[ "$k" == "[" ] && read -rsn1 k
-		# 	[ "$k" == "O" ] && read -rsn1 k
-		# 	case "$k" in
-		# 	A)
-		#         # Up 处理
-		# 		echo "up"
-		# 		;;
-		# 	B)
-		#         # Down
-		# 		echo "Down"
-		# 		;;
-		#     esac
-		# 	read -rsn4 -t .1
-		;;
-	esac
-done
+# 	$'\e')
+# 		# 再次读取一个字符
+#         echo "$k"
+# 		read -rsn1 k
+# 		# # read -rsn1 k
+# 		# 如果为空字符，则return，return的含义？
+# 		if [ "$k" == "" ]
+# 		then
+# 			echo "Esc"
+# 		fi
+# 		# # 如果为[则再读取一个字符
+# 		# [ "$k" == "[" ] && read -rsn1 k
+# 		# # 如果为O则再读取一个字符，为O的含义？
+# 		# [ "$k" == "O" ] && read -rsn1 k
+# 		# # 判断是哪个方向键
+# 		# case "$k" in
+# 		# A)
+# 		# 	# Up
+# 		# 	echo "up"
+# 		# 	;;
+# 		# B)
+# 		# 	# Down
+# 		# 	echo "Down"
+# 		# 	;;
+# 		# C)
+# 		# 	# Right
+# 		# 	echo "Right"
+# 		# 	;;
+# 		# D)
+# 		# 	# Left
+# 		# 	echo "Left"
+# 		# 	;;
+# 		# *)
+# 		#     echo "Esc"
+# 		#     ;;
+# 		# esac
+# 		# read -rsn4 -t .1
+# 		;;
+# 	$'\x09')
+# 		# Tab处理
+# 		echo "Tab"
+# 		;;
+# 	$'\178')
+# 		# Tab处理
+# 		echo "Tab"
+# 		;;
+# 	$'\177')
+# 		# Backspace处理
+# 		echo "backspace"
+# 		;;
+# 	$'\x7f')
+# 		# Backspace处理
+# 		echo "backspace"
+# 		;;
+# 	$'x1b')
+# 		# # ESC处理
+# 		echo "ESC处理"
+# 		#     read -rsn1 k
+# 		# 	[ "$k" == "" ] && return
+# 		# 	[ "$k" == "[" ] && read -rsn1 k
+# 		# 	[ "$k" == "O" ] && read -rsn1 k
+# 		# 	case "$k" in
+# 		# 	A)
+# 		#         # Up 处理
+# 		# 		echo "up"
+# 		# 		;;
+# 		# 	B)
+# 		#         # Down
+# 		# 		echo "Down"
+# 		# 		;;
+# 		#     esac
+# 		# 	read -rsn4 -t .1
+# 		;;
+# 	esac
+# done
 
-# echo -e "This script is used to copy all the PKGBUILDS needed into a build 
-# directory of choice\n
-# This portion of print is a test" 
+# # echo -e "This script is used to copy all the PKGBUILDS needed into a build 
+# # directory of choice\n
+# # This portion of print is a test" 
 
-# read key
-#  case $key in
-# 	*) abscopy ;;
-#     255) leavin ;;
-#  esac
-echo "character"
-echo "Hello World!"
-echo "My name is Song."
+# # read key
+# #  case $key in
+# # 	*) abscopy ;;
+# #     255) leavin ;;
+# #  esac
+# echo "character"
+# echo "Hello World!"
+# echo "My name is Song."
 

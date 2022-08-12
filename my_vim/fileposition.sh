@@ -1,6 +1,6 @@
 #/bin/bash
 
-y=1
+y=3
 # x=4
 x=4
 
@@ -44,6 +44,6 @@ echo line
 # echo "------"
 # sed -e -n "$y,$y p" "$1" "s/.\{$x\}/&$char/"
 
-printf "替换文件中的相应行\n"
-# 替换文件中相应行
-sed ""$y"c $line" "$1"
+# printf "替换文件中的相应行\n"
+# # 替换文件中相应行
+# sed ""$y"c $line" "$1"

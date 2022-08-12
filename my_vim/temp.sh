@@ -26,30 +26,6 @@ cursor_text_y=1
 # 文件名
 filename=$1
 
-# 重定向错误
-exec 3>&2
-exec 2>testerror
-
-
-
-failure() {
-  local lineno=$1
-  local msg=$2
-  echo "Failed at $lineno: $msg" >> testerror
-}
-trap 'failure ${LINENO} "$BASH_COMMAND"' ERR
-
-
-# 设定光标位置
-function MoveCursor {
-    tput cup $cursor_y $cursor_x
-	# echo $cursor_y$cursor_x
-}
-# 计算光标所在位置在文件中的列数和行数
-function PosCursorInText {
-	(( cursor_text_x=$cursor_x+$text_x ))
-	(( cursor_text_y=$cursor_y+$text_y ))
-}
 # 初始化
 function Init {
     clear
@@ -72,9 +48,7 @@ function Init {
 		# touch "$filename"
 	fi
     cp -f "$filename" "$filename.cp"
-	# 初始化光标位置
 	MoveCursor
-	PosCursorInText
 }
 
 # 显示文件内容
@@ -93,18 +67,18 @@ function textViewer {
 	# 因为有新老光标的交替，如果在每次while循环MoveCusor，会引起错乱
     
 	# # 定位光标位置
-	PosCursorInText
+	# PosCursorInText
 
 	case "$state" in
 	0)
 	    # 普通模式，在页面最后一行显示文件名称
-		(tput sc ; tput cup $lines 1 ; printf "\"%s\"" $filename; tput rc)
+		# (tput sc ; tput cup $lines 1 ; echo "$filename" ; tput rc)
 		;;
 	1)
 	    # 插入模式，在页面最后一行显示-- INSERT --
 		# (tput sc; tput cup $lines 0; printf "\x1b[1m-- INSERT --\x1b[0m"; tput rc)
 		(tput sc; tput cup $lines 0; printf "\x1b[1m-- INSERT --\x1b[0m"; tput cup $lines $((cols-7)); printf "%s,%s" $cursor_text_y $cursor_text_x; tput rc)
-		(tput sc; tput cup $lines $((cols-16)); printf "%s,%s" $cursor_y $cursor_x; tput rc)
+		# (tput sc; tput cup $lines $((cols-3)); printf "%s,%s" $cursor_text_y $cursor_text_x; tput rc)
 		;;
 	2)
 	    # 命令模式，在页面最后一行显示:
@@ -112,6 +86,17 @@ function textViewer {
 	esac
 
 	MoveCursor
+}
+
+# 设定光标位置
+function MoveCursor {
+    tput cup $cursor_y $cursor_x
+	# echo $cursor_y$cursor_x
+}
+function PosCursorInText {
+	# 计算光标所在位置在文件中的列数和行数
+	(( cursor_text_x=$cursor_x+$text_x ))
+	(( cursor_text_y=$cursor_y+$text_y ))
 }
 
 # 向上移动光标
@@ -203,32 +188,16 @@ function Left {
 }
 
 function InsertVisChar {
-	local key="$1" # 保存插入的字符
-	echo "$key" # debug
-	# 取出第cursor_text_y行
-	local line=$(sed -n "$cursor_text_y p" "$filename")
-	# 提取第cursor_text_y行字符串的前部分和后半部分
-    local begin=${line:0:cursor_x}
-	local end=${line:cursor_x}
-    line="$begin$key$end"
-    # local line=$(sed -n "$cursor_text_y,$cursor_text_y p" "$filename" | sed "s/.\{$((cursor_text_x-1))\}/&$key/")
+    local key="$1"
+	# 插入字符
+    # local line=$(sed -n "$cursor_text_y,$cursor_text_y p" "$filename" | sed "s/.\{$cursor_text_x\}/&$key/")
+    local line=$(sed -n "$cursor_text_y,$cursor_text_y p" "$filename" | sed "s/.\{$((cursor_text_x-1))\}/&$key/")
     # 替换文件中相应行
-    sed -i "$cursor_text_y c\\$line" "$filename"
+    sed -i ""$cursor_text_y"c $line" "$filename"
 	# 光标向右移动，如果到了一行末尾需要向下移动，这个能不能交给less的光标自己完成？为觉得是不行的，毕竟已经控制了光标的位置
     Right
 	# # 设定光标位置
 	# MoveCursor
-}
-
-function Enter {
-	# 取出第cursor_text_y行
-    local line=$(sed -n "$cursor_text_y,$cursor_text_y p" "$filename")
-    # 提取第cursor_text_y行字符串的前部分和后半部分
-	local begin=${line:0:cursor_x}
-	local end=${line:cursor_x}
-	# 替换文件
-	sed -i "$cursor_text_y c\\$begin" "$filename"
-	sed -i "$cursor_text_y a\\$end" "$filename"
 }
 
 function Space {
@@ -236,28 +205,14 @@ function Space {
 }
 
 function Backspace {
-	PosCursorInText
-
-    if [ $cursor_x -gt 0 ]
-	then
-	    # 取出第cursor_text_y行
-		local line=$(sed -n "$cursor_text_y p" "$filename")
-		# 提取第cursor_text_y行字符串的前部分和后半部分
-		local begin=${line:0:cursor_x-1} # 位置:长度
-		local end=${line:cursor_x}
-		line="$begin$end"
-		# 替换文件中相应行
-		sed -i "$cursor_text_y c\\$line" "$filename"
-		Left
-	fi
-
-	# # 如果没有到第一列，to do
-	# # local temp_cursor_text_x=$((cursor_text_x-1))
-	# local line=$(sed -n "$cursor_text_y,$cursor_text_y p" "$filename" | sed "s/.//$((cursor_text_x-1))")
-	# # 替换文件中相应行
-	# # printf "\n%s\n" $line
-    # sed -i ""$cursor_text_y"c $line" "$filename"
-	# # 光标向左移动，这里需要考虑是否到上一行
+	# 如果没有到第一列，to do
+	# local temp_cursor_text_x=$((cursor_text_x-1))
+	local line=$(sed -n "$cursor_text_y,$cursor_text_y p" "$filename" | sed "s/.//$((cursor_text_x-1))")
+	# 替换文件中相应行
+	# printf "\n%s\n" $line
+    sed -i ""$cursor_text_y"c $line" "$filename"
+	# 光标向左移动，这里需要考虑是否到上一行
+	Left
 }
 
 
@@ -286,7 +241,7 @@ function Read {
 	$'\E[F'*) # end键
 	    ;;
 	$'\n'*)
-        Enter;;
+        echo "enter";;
     $'\t'*)
         echo "tab";;
 	$' '*)
@@ -365,10 +320,7 @@ do
 		CommandMode;;
 	esac
 	# textViewer "$filename"# debug
-
 	textViewer
 done
 
 # echo "Done"
-# 恢复标准错误流
-exec 2>&3
