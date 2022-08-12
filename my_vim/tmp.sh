@@ -15,7 +15,7 @@ cols=$(tput cols)
 # shell行数目
 lines=$(tput lines)
 # 文本显示行数目
-text_lines=$(($lines-2)) # to do，这里可以不用改，就这个设置也可以，看着比较清晰，debug
+text_lines=$(($lines-1))
 text_cols=$cols
 # 文本位置，即第一行第一列在文本中的第y行第x列
 text_x=1
@@ -65,27 +65,21 @@ function textViewer {
 	# echo $text | cat -n
     
 	# 因为有新老光标的交替，如果在每次while循环MoveCusor，会引起错乱
-    
-	# # 定位光标位置
-	# PosCursorInText
-
-	case "$state" in
-	0)
-	    # 普通模式，在页面最后一行显示文件名称
-		# (tput sc ; tput cup $lines 1 ; echo "$filename" ; tput rc)
-		;;
-	1)
-	    # 插入模式，在页面最后一行显示-- INSERT --
-		# (tput sc; tput cup $lines 0; printf "\x1b[1m-- INSERT --\x1b[0m"; tput rc)
-		(tput sc; tput cup $lines 0; printf "\x1b[1m-- INSERT --\x1b[0m"; tput cup $lines $((cols-7)); printf "%s,%s" $cursor_text_y $cursor_text_x; tput rc)
-		# (tput sc; tput cup $lines $((cols-3)); printf "%s,%s" $cursor_text_y $cursor_text_x; tput rc)
-		;;
-	2)
-	    # 命令模式，在页面最后一行显示:
-		;;
-	esac
 
 	MoveCursor
+
+	# case "$state" in
+	# 0)
+	#     # 普通模式，在页面最后一行显示文件名称
+	# 	(tput sc ; tput cup $lines 1 ; echo "$filename" ; tput rc)
+	# 	;;
+	# 1)
+	#     # 插入模式，在页面最后一行显示-- INSERT --
+	# 	;;
+	# 2)
+	#     # 命令模式，在页面最后一行显示:
+	# 	;;
+	# esac
 }
 
 # 设定光标位置
@@ -323,4 +317,4 @@ do
 	textViewer
 done
 
-# echo "Done"
+echo "Done"
