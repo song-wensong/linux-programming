@@ -47,7 +47,7 @@ function Init {
 		# # 新建文件
 		# touch "$filename"
 	fi
-    
+    cp -f "$filename" "$filename.cp"
 	MoveCursor
 }
 
@@ -66,7 +66,7 @@ function textViewer {
     
 	# 因为有新老光标的交替，如果在每次while循环MoveCusor，会引起错乱
 
-	# MoveCursor
+	MoveCursor
 
 	# case "$state" in
 	# 0)
@@ -92,6 +92,7 @@ function PosCursorInText {
 	(( cursor_text_x=$cursor_x+$text_x ))
 	(( cursor_text_y=$cursor_y+$text_y ))
 }
+
 # 向上移动光标
 function Up {
 	# 光标所在行数大于0才能移动
@@ -116,6 +117,8 @@ function Up {
 		fi
 	fi
     MoveCursor
+	# 移动光标后需要重新定位光标所在屏幕位置在文件中的位置
+	PosCursorInText
 	# # 将cursor_x复原
     # cursor_x=$old_cursor_x
 }
@@ -142,6 +145,8 @@ function Down {
 		fi
 	fi
     MoveCursor
+	# 移动光标后需要重新定位光标所在屏幕位置在文件中的位置
+	PosCursorInText
 	# # 将cursor_x复原
     # cursor_x=$old_cursor_x
 }
@@ -158,6 +163,8 @@ function Right {
 		old_cursor_x=$cursor_x
 	fi
     MoveCursor
+	# 移动光标后需要重新定位光标所在屏幕位置在文件中的位置
+	PosCursorInText
 }
 # 光标向左移动
 function Left {
@@ -170,25 +177,40 @@ function Left {
     fi
 	# 设定光标位置
 	MoveCursor
+	# 移动光标后需要重新定位光标所在屏幕位置在文件中的位置
+	PosCursorInText
 }
 
+function InsertVisChar {
+    local key="$1"
+	# 插入字符
+    # local line=$(sed -n "$cursor_text_y,$cursor_text_y p" "$filename" | sed "s/.\{$cursor_text_x\}/&$key/")
+    local line=$(sed -n "$cursor_text_y,$cursor_text_y p" "$filename" | sed "s/.\{$((cursor_text_x-1))\}/&$key/")
+    # 替换文件中相应行
+    sed -i ""$cursor_text_y"c $line" "$filename"
+	# 光标向右移动，如果到了一行末尾需要向下移动，这个能不能交给less的光标自己完成？为觉得是不行的，毕竟已经控制了光标的位置
+    Right
+	# # 设定光标位置
+	# MoveCursor
+}
+
+function Space {
+	InsertVisChar " "
+}
+
+function Backspace {
+	# 如果没有到第一列，to do
+	# local temp_cursor_text_x=$((cursor_text_x-1))
+	local line=$(sed -n "$cursor_text_y,$cursor_text_y p" "$filename" | sed "s/.//$((cursor_text_x-1))")
+	# 替换文件中相应行
+	# printf "\n%s\n" $line
+    sed -i ""$cursor_text_y"c $line" "$filename"
+	# 光标向左移动，这里需要考虑是否到上一行
+	Left
+}
+
+
 function Read {
-    # read -s option
-    # case $option in
-    # $'\E[A'*)
-    #     Up;;
-    # $'\E[B'*)
-    #     Down;;
-    # $'\E[C'*)
-    #     Right;;
-    # $'\E[D'*)
-    #     Left;;
-    # $'\E'*)
-    #     Esc;;
-    # *)
-    #     clear
-    #     echo "Sorry, wrong selection";;
-    # esac
 	read -sN1 key # 1个字符，静默
 	read -sN1 -t 0.0001 k1
 	read -sN1 -t 0.0001 k2
@@ -196,24 +218,32 @@ function Read {
 	key+=${k1}${k2}${k3}
 
 	case "$key" in
-	[[:graph:]])
-	    
-		;;
-	$'\E[A')
+	[[:graph:]]) # 可见字符
+	    InsertVisChar "$key";;
+	$'\E[A'*) # 上方向键
 	    Up;;
-	$'\E[B')
+	$'\E[B'*) # 下方向键
 	    Down;;
-	$'\E[C')
+	$'\E[C'*) # 右方向键
 	    Right;;
-	$'\E[D')
+	$'\E[D'*) # 左方向键
 	    Left;;
-	$'\E')
+	$'\E'*)
 	    Esc;;
-	$'\E[H') # home键
+	$'\E[H'*) # home键
 	    ;;
-	$'\E[F') # end键
+	$'\E[F'*) # end键
 	    ;;
-	
+	$'\n'*)
+        echo "enter";;
+    $'\t'*)
+        echo "tab";;
+	$' '*)
+	    Space;;
+	$'\b'*)
+	    Backspace;;
+	$''*)
+        Backspace;;
     esac
 }
 
@@ -284,6 +314,7 @@ do
 		CommandMode;;
 	esac
 	# textViewer "$filename"# debug
+	textViewer
 done
 
 echo "Done"
