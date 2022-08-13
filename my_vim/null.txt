@@ -3,9 +3,10 @@
 echo "Hello World"
 
 function {
-    echo ""
+    echo "hello world"
 }
 
-echo "hello world!"jjjjjj
-jjjjjj
+echo "hello world!"
+
+echo "hello"
 

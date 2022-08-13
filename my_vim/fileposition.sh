@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 y=3
 # x=4

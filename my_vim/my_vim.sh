@@ -1,7 +1,8 @@
 #!/bin/bash
-# 宋文松
+# my_vim.sh
+# 宋文松 3200102854
 # 2022.08.08
-# 我自己制作的一个简易的vim编辑器
+# 制作的一个简易的vim编辑器
 
 # 全局变量定义
 # 普通模式
@@ -38,6 +39,7 @@ failure() {
 	echo "Failed at $lineno: $msg" >>testerror # 向testerror中输入错误信息
 }
 trap 'failure ${LINENO} "$BASH_COMMAND"' ERR
+
 # 设定光标位置
 function MoveCursor {
 	tput cup $cursor_y $cursor_x
@@ -51,8 +53,6 @@ function PosCursorInText {
 # 初始化
 function Init {
 	clear
-	# echo "hello world"
-
 	# 检查文件是否存在
 	if [ -e "$filename" ]
 	then
@@ -60,11 +60,9 @@ function Init {
 		textViewer # 显示文本
 	else
 		# 文件不存在
-		echo "File does not exist"
-		# 退出脚本
-		exit
-		# # 新建文件
-		# touch "$filename"
+		# 新建文件
+		touch "$filename"
+		textViewer # 显示文本
 	fi
 	cp -f "$filename" "$filename.cp"
 	# 初始化光标位置
@@ -74,42 +72,32 @@ function Init {
 
 # 显示文件内容
 function textViewer {
-	# 还需要设定显示范围 ......
-	clear
-	# echo "text_y=$text_y"
+	clear # 清空屏幕
+	# 设定屏幕范围
 	text_y_begin=$text_y
-	# echo "text_y=$text_y"
 	text_y_end=$((text_y + text_lines - 1))
-	# echo "text_y_begin=$text_y_begin"
-	# echo "text_y_end=$text_y_end"
-	sed -n "$text_y_begin,$text_y_end p" "$filename"
-	# echo $text | cat -n
-
-	# 因为有新老光标的交替，如果在每次while循环MoveCusor，会引起错乱
-
-	# # 定位光标位置
+	# 显示部分文件
+	sed -n "$text_y_begin,$text_y_end p" "$filename" 
+	# 定位光标位置
 	PosCursorInText
-
+    # 根据模式显示屏幕最后一行的内容
 	case "$state" in
-	0)
+	0) # 普通模式
 		local filename_len=${#filename} # 文件名字长度
 		local filelines=$(sed -n '$=' "$filename") # 计算行数
-		# 普通模式，在页面最后一行显示文件名称，行数以及光标位置
+		# 在页面最后一行显示文件名称，行数以及光标位置
 		(tput sc; tput cup $lines 1; printf "\"%s\"" $filename; tput cup $lines $((filename_len+4)); printf "%sL" $filelines; tput cup $lines $((cols - 7)); printf "%s,%s" $cursor_text_y $cursor_text_x; tput rc)
 		;;
-	1)
-		# 插入模式，在页面最后一行显示-- INSERT --
-		# (tput sc; tput cup $lines 0; printf "\x1b[1m-- INSERT --\x1b[0m"; tput rc)
+	1) # 插入模式
+		# 在页面最后一行显示-- INSERT --
 		(tput sc; tput cup $lines 0; printf "\x1b[1m-- INSERT --\x1b[0m"; tput cup $lines $((cols - 7)); printf "%s,%s" $cursor_text_y $cursor_text_x; tput rc)
 		(tput sc; tput cup $lines $((cols - 16)); printf "%s,%s" $cursor_y $cursor_x; tput rc)
 		;;
-	2)
-		# 命令模式，在页面最后一行显示:
-		# (tput sc; tput cup $lines 0; printf "\x1b[1m-- INSERT --\x1b[0m"; tput cup $lines $((cols - 7)); printf "%s,%s" $cursor_text_y $cursor_text_x; tput rc)
+	2) # 命令模式
+		# 在页面最后一行显示:，在CommandMode函数中处理
 		;;
 	esac
-
-	MoveCursor
+	MoveCursor # 移动光标
 }
 
 # Up键处理
@@ -119,17 +107,13 @@ function Up {
 	then
 		# 将cursor_x复原
 		cursor_x=$old_cursor_x
-
+        # 光标向上移动
 		((cursor_y = $cursor_y - 1))
 		# 计算光标所在位置在文件中的列数和行数
 		PosCursorInText
 		# 计算光标所在行的字符串长度
 		local line=$(sed -n "$cursor_text_y,$cursor_text_y p" "$filename")
 		local line_len=${#line}
-		# 如果光标所在行的字符串长度小于old_cursor_x（因为左右而修改的光标的左右位置），则将光标移动至
-		# 这里为发现insert模式和普通模式最后位置有所区别，insert模式要多一列，奇葩，... to do
-		# echo "line_len=$line_len"
-		# echo $((old_cursor_x-1))
 		if [ $line_len -le $((old_cursor_x - 1)) ]; then
 			((cursor_x = $line_len)) # 将光标定位至字符串位置末尾
 		fi
@@ -138,11 +122,8 @@ function Up {
 	then
 	    ((text_y-=1))
 	fi
-	MoveCursor
-	# 移动光标后需要重新定位光标所在屏幕位置在文件中的位置
-	PosCursorInText
-	# # 将cursor_x复原
-	# cursor_x=$old_cursor_x
+	MoveCursor # 移动光标
+	PosCursorInText # 重新定位光标所在屏幕位置在文件中的位置
 }
 # Down键处理
 function Down {
@@ -160,10 +141,7 @@ function Down {
 		# 计算光标所在行的字符串长度
 		local line=$(sed -n "$cursor_text_y,$cursor_text_y p" "$filename")
 		local line_len=${#line}
-		# 如果光标所在行的字符串长度小于old_cursor_x（因为左右而修改的光标的左右位置），则将光标移动至
-		# 这里为发现insert模式和普通模式最后位置有所区别，insert模式要多一列，奇葩，... to do
-		# echo "line_len=$line_len"
-		# echo $((old_cursor_x-1))
+		# 如果光标所在行的字符串长度小于old_cursor_x（因为左右而修改的光标的左右位置），则将光标移动至字符串末尾
 		if [ $line_len -le $((old_cursor_x - 1)) ]
 		then
 			((cursor_x = $line_len)) # 将光标定位至字符串位置末尾
@@ -173,11 +151,8 @@ function Down {
 	then
 	    ((text_y+=1))
 	fi
-	MoveCursor
-	# 移动光标后需要重新定位光标所在屏幕位置在文件中的位置
-	PosCursorInText
-	# # 将cursor_x复原
-	# cursor_x=$old_cursor_x
+	MoveCursor # 移动光标
+	PosCursorInText # 移动光标后需要重新定位光标所在屏幕位置在文件中的位置
 }
 #处理right键
 function Right {
@@ -194,9 +169,6 @@ function Right {
 		# 移动光标后需要重新定位光标所在屏幕位置在文件中的位置
 		PosCursorInText
 	fi
-	# MoveCursor
-	# # 移动光标后需要重新定位光标所在屏幕位置在文件中的位置
-	# PosCursorInText
 }
 # 处理Left键
 function Left {
@@ -231,8 +203,6 @@ function InsertVisChar {
 	fi
 	# 光标向右移动
 	Right
-	# # 设定光标位置
-	# MoveCursor
 }
 # Esc键处理
 function Esc {
@@ -242,24 +212,6 @@ function Esc {
 # Enter键处理
 function Enter {
     InsertVisChar "\n"
-
-	# # 取出第cursor_text_y行
-	# local line=$(sed -n "$cursor_text_y,$cursor_text_y p" "$filename")
-	# # 提取第cursor_text_y行字符串的前部分和后半部分
-	# local begin=${line:0:cursor_x}
-	# local end=${line:cursor_x}
-	# # 替换文件
-	# sed -i "$cursor_text_y c\\$begin" "$filename"
-	# # 因为sed无法读取空字符，判断光标是否到一行末尾，如果到达就插入空行
-	# if [ $cursor_x -eq ${#line} ]
-	# then
-	#     echo "$cursor_text_y end yes">>testerror
-	#     sed -i "$cursor_text_y a\\\\" "$filename"
-	# else
-	#     echo "$cursor_text_y No end yes">>testerror
-	#     sed -i "$cursor_text_y a\\$end" "$filename"
-	# fi
-
     # 将光标移动至下一行
 	Down
 	# 将光标移动至一行开头
@@ -335,6 +287,18 @@ function NormalModeRead {
 		elif [[ "$key" == :* ]] #如果输入:进入命令模式
 		then
 		    state=2
+		elif [[ "$key" == k* ]] # 普通模式k与方向键up键功能相同
+		then
+		    Up
+		elif [[ "$key" == j* ]] # 普通模式k与方向键Down键功能相同
+		then
+		    Down
+		elif [[ "$key" == l* ]] # 普通模式k与方向键Right键功能相同
+		then
+		    Right
+		elif [[ "$key" == h* ]] # 普通模式h与方向键Left键功能相同
+		then
+		    Left
 		fi
 		;;
 	$'\E[A'*) # 上方向键
@@ -420,19 +384,31 @@ function CommandMode {
 	printf ":" # 打印左下端的冒号
     
 	read character # 读取字符串
-	if [ "$character" = "wq" ] # 保存并推出
-	then
+	case "$character" in
+	"wq") # 保存并退出
+		return 1  # 如果退出返回值就为1
+		;;
+    "q" | "q!") # 退出不保存
+	    cp "$filename.cp" "$filename" # 不保存就恢复原来文件
 		return 1 # 如果退出返回值就为1
-	elif [ "$character" = "q" ] # 退出不保存
-	then
-		cp "$filename.cp" "$filename" # 不保存就恢复原来文件
-		return 1 # 如果退出返回值就为1
-	elif [ "$character" = "w" ] # 保存
-	then
+		;;
+	"w") # 保存
+	    state=0 # 切换为普通模式
+	    tput rc # 将光标置位
+		cp -f "$filename" "$filename.cp" # 保存文件
+		return 0 # 设定函数返回值
+		;;
+	$'\E'*)
 	    state=0 # 切换为普通模式
 	    tput rc # 将光标置位
 		return 0 # 设定函数返回值
-	fi
+		;;
+	*)
+	    state=0 # 切换为普通模式
+	    tput rc # 将光标置位
+		return 0 # 设定函数返回值
+		;;
+	esac
 }
 
 # 初始化
@@ -458,6 +434,7 @@ while true; do
 	textViewer # 重现文本
 done
 
+rm ./"$filename.cp"
 clear # 清理屏幕
 # 恢复标准错误流
 exec 2>&3
