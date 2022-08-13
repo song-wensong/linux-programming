@@ -25,6 +25,7 @@ cursor_text_x=1
 cursor_text_y=1
 # 文件名
 filename=$1
+filelines=$(sed -n '$=' "$1")
 
 # 重定向错误
 exec 3>&2
@@ -129,8 +130,9 @@ function textViewer {
 
 # 向上移动光标
 function Up {
-	# 光标所在行数大于0才能移动
-	if [ $cursor_y -gt 0 ]; then
+	# 光标所在行数大于0并且光标所在文件行数大于1
+	if [ $cursor_y -gt 0 ] && [ $cursor_text_y -gt 1 ]
+	then
 		# 将cursor_x复原
 		cursor_x=$old_cursor_x
 
@@ -147,6 +149,10 @@ function Up {
 		if [ $line_len -le $((old_cursor_x - 1)) ]; then
 			((cursor_x = $line_len)) # 将光标定位至字符串位置末尾
 		fi
+	# 如果等于0且到顶端，则向上翻页
+	elif [ $cursor_y -eq 0 ] && [ $cursor_text_y -gt 1 ]
+	then
+	    ((text_y-=1))
 	fi
 	MoveCursor
 	# 移动光标后需要重新定位光标所在屏幕位置在文件中的位置
@@ -155,11 +161,12 @@ function Up {
 	# cursor_x=$old_cursor_x
 }
 function Down {
-	# 光标所在行数小于lines才能移动
-	if [ $cursor_y -lt $((text_lines - 1)) ]; then
+	# 光标所在行数小于lines才能移动并且光标所在文行的行数小于文件总行数
+	if [ $cursor_y -lt $((text_lines - 1)) ] && [ $cursor_text_y -lt $filelines ]
+	then
 		# 将cursor_x复原
 		cursor_x=$old_cursor_x
-
+        # 将光标下移一行
 		((cursor_y = $cursor_y + 1))
 		# 计算光标所在位置在文件中的列数和行数
 		PosCursorInText
@@ -170,9 +177,14 @@ function Down {
 		# 这里为发现insert模式和普通模式最后位置有所区别，insert模式要多一列，奇葩，... to do
 		# echo "line_len=$line_len"
 		# echo $((old_cursor_x-1))
-		if [ $line_len -le $((old_cursor_x - 1)) ]; then
+		if [ $line_len -le $((old_cursor_x - 1)) ]
+		then
 			((cursor_x = $line_len)) # 将光标定位至字符串位置末尾
 		fi
+	# 如果光标移到指定屏幕最后一行，进行翻页
+	elif [ $cursor_y -eq $((text_lines - 1)) ] && [ $cursor_text_y -lt $filelines ]
+	then
+	    ((text_y+=1))
 	fi
 	MoveCursor
 	# 移动光标后需要重新定位光标所在屏幕位置在文件中的位置
@@ -253,16 +265,26 @@ function Enter {
 	MoveCursor
 }
 
+function Tab {
+	InsertVisChar " "
+	InsertVisChar " "
+	InsertVisChar " "
+	InsertVisChar " "
+	# InsertVisChar "\t"
+	# local temp="\t"
+	# ((cursor_x+=4))
+}
+
 function Space {
 	InsertVisChar " "
 }
 
 function Backspace {
 	PosCursorInText
-
-	if [ $cursor_x -gt 0 ]; then
-		# 取出第cursor_text_y行
-		local line=$(sed -n "$cursor_text_y p" "$filename")
+    # 取出第cursor_text_y行
+	local line=$(sed -n "$cursor_text_y p" "$filename")
+	if [ $cursor_x -gt 0 ] # 如果光标所在列数大于0
+	then
 		# 提取第cursor_text_y行字符串的前部分和后半部分
 		local begin=${line:0:cursor_x-1} # 位置:长度
 		local end=${line:cursor_x}
@@ -270,6 +292,24 @@ function Backspace {
 		# 替换文件中相应行
 		sed -i "$cursor_text_y c\\$line" "$filename"
 		Left
+	elif [ $cursor_x -eq 0 ] # 如果光标处于第0列
+	then
+	    # 如果光标所在文本行数大于1
+		if [ $cursor_text_y -gt 1 ]
+		then
+		    # local lastline_text_y=$((cursor_text_y-1))
+		    # 上一行
+	        local lastline=$(sed -n "$((cursor_text_y-1)) p" "$filename")
+			# 上一行与光标所在行的拼接
+			local newline="$lastline$line"
+			# 替换文件中光标所处的上一行
+		    sed -i "$((cursor_text_y-1)) c\\$newline" "$filename"
+            # 删除光标所在行
+			sed -i "$cursor_text_y d" "$filename"
+			# 改变光标位置
+			((cursor_y-=1)) # 行位置
+			cursor_x=${#lastline} # 列位置
+		fi
 	fi
 
 	# # 如果没有到第一列，to do
@@ -310,7 +350,7 @@ function Read {
 		Enter
 		;;
 	$'\t'*)
-		echo "tab"
+		Tab
 		;;
 	$' '*)
 		Space
