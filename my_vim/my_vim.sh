@@ -225,16 +225,22 @@ function Left {
 
 function InsertVisChar {
 	local key="$1" # 保存插入的字符
-	echo "$key"    # debug
-	# 取出第cursor_text_y行
-	local line=$(sed -n "$cursor_text_y p" "$filename")
-	# 提取第cursor_text_y行字符串的前部分和后半部分
-	local begin=${line:0:cursor_x}
-	local end=${line:cursor_x}
-	line="$begin$key$end"
-	# local line=$(sed -n "$cursor_text_y,$cursor_text_y p" "$filename" | sed "s/.\{$((cursor_text_x-1))\}/&$key/")
-	# 替换文件中相应行
-	sed -i "$cursor_text_y c\\$line" "$filename"
+	if [ -s "$filename" ] # 如果文件存在且为非空
+	then
+	    # echo "2" >> testerror # debug
+	    # 取出第cursor_text_y行
+		local line=$(sed -n "$cursor_text_y p" "$filename")
+		# 提取第cursor_text_y行字符串的前部分和后半部分
+		local begin=${line:0:cursor_x}
+		local end=${line:cursor_x}
+		line="$begin$key$end"
+		# local line=$(sed -n "$cursor_text_y,$cursor_text_y p" "$filename" | sed "s/.\{$((cursor_text_x-1))\}/&$key/")
+		# 替换文件中相应行
+		sed -i "$cursor_text_y c\\$line" "$filename"
+	else
+		# echo "1" >> testerror # debug
+	    echo -n "$key" > "$filename"
+	fi
 	# 光标向右移动，如果到了一行末尾需要向下移动，这个能不能交给less的光标自己完成？为觉得是不行的，毕竟已经控制了光标的位置
 	Right
 	# # 设定光标位置
@@ -296,8 +302,8 @@ function Backspace {
 		sed -i "$cursor_text_y c\\$line" "$filename"
 		# 光标向左移动
 		Left
-		# 如果此行中为空行，则插入一个换行符
-		if [ ${#line} -eq 0 ]
+		# 如果此行中为空行并且此行不为文件第一行，则插入一个换行符
+		if [ ${#line} -eq 0 ] && [ $cursor_text_y -gt 1 ]
 		then
 		    InsertVisChar "\n"
 		fi
