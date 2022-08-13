@@ -25,7 +25,7 @@ cursor_text_x=1
 cursor_text_y=1
 # 文件名
 filename=$1
-filelines=$(sed -n '$=' "$1")
+# filelines=$(sed -n '$=' "$1")
 
 # 重定向错误
 exec 3>&2
@@ -161,6 +161,8 @@ function Up {
 	# cursor_x=$old_cursor_x
 }
 function Down {
+	# 文件行数
+	local filelines=$(sed -n '$=' "$filename")
 	# 光标所在行数小于lines才能移动并且光标所在文行的行数小于文件总行数
 	if [ $cursor_y -lt $((text_lines - 1)) ] && [ $cursor_text_y -lt $filelines ]
 	then
@@ -259,9 +261,10 @@ function Enter {
 	#     sed -i "$cursor_text_y a\\$end" "$filename"
 	# fi
 
-    # 将光标移动至下一行开头
+    # 将光标移动至下一行
+	Down
+	# 将光标移动至一行开头
 	cursor_x=0
-	((cursor_y+=1))
 	MoveCursor
 }
 
@@ -291,13 +294,18 @@ function Backspace {
 		line="$begin$end"
 		# 替换文件中相应行
 		sed -i "$cursor_text_y c\\$line" "$filename"
+		# 光标向左移动
 		Left
+		# 如果此行中为空行，则插入一个换行符
+		if [ ${#line} -eq 0 ]
+		then
+		    InsertVisChar "\n"
+		fi
 	elif [ $cursor_x -eq 0 ] # 如果光标处于第0列
 	then
 	    # 如果光标所在文本行数大于1
 		if [ $cursor_text_y -gt 1 ]
 		then
-		    # local lastline_text_y=$((cursor_text_y-1))
 		    # 上一行
 	        local lastline=$(sed -n "$((cursor_text_y-1)) p" "$filename")
 			# 上一行与光标所在行的拼接
@@ -307,18 +315,11 @@ function Backspace {
             # 删除光标所在行
 			sed -i "$cursor_text_y d" "$filename"
 			# 改变光标位置
-			((cursor_y-=1)) # 行位置
+			# ((cursor_y-=1)) # 行位置
+			Up # 行位置
 			cursor_x=${#lastline} # 列位置
 		fi
 	fi
-
-	# # 如果没有到第一列，to do
-	# # local temp_cursor_text_x=$((cursor_text_x-1))
-	# local line=$(sed -n "$cursor_text_y,$cursor_text_y p" "$filename" | sed "s/.//$((cursor_text_x-1))")
-	# # 替换文件中相应行
-	# # printf "\n%s\n" $line
-	# sed -i ""$cursor_text_y"c $line" "$filename"
-	# # 光标向左移动，这里需要考虑是否到上一行
 }
 
 function Read {
