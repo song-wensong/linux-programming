@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 # simple script menu
 
 function menu {
@@ -47,7 +47,7 @@ function Esc {
     echo "There is Esc function"
 }
 
-while [ 1 ]
+   while [ 1 ]
 do
     menu
     case $option in

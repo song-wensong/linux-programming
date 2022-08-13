@@ -1,9 +1,9 @@
-#/bin/bash
+#!/bin/bash
 
 clear
 
-y=1
-cursor_x=1
+y=4
+cursor_x=0
 filename="$1"
 line=$(sed -n "$y p" "$1")
 # line=$(sed -n "$y,$y p" "$1")
@@ -28,6 +28,14 @@ printf "保留结尾%s个字符"
 end=${line:cursor_x}
 # echo $end
 printf "%s\n" "$end"
+printf "%s\n" "------"
+
+if [ $cursor_x -eq ${#line} ]
+then
+    sed "$y a\\\\" "$filename"
+    # sed "$y a\\\n" "$filename"
+fi
+
 
 
 
@@ -52,8 +60,10 @@ function Backspace {
 		
 	fi
 }
-printf "Backspace:\n"
-Backspace
+# printf "Backspace:\n"
+# Backspace
+
+
 
 # 增加一个字符
 # read -sN1 char

@@ -1,4 +1,4 @@
-jav
+#!/bin/bash
 
 str="    i"
 echo ${#str}

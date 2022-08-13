@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 # 设定光标位置
 function MoveCursor {
     tput cup $y $x
@@ -22,13 +22,16 @@ function Left {
     (( x=$x-1 ))
     MoveCursor
 }
+# function Enter {
+
+# }
 function Esc {
     echo "There is Esc function"
 }
 
 clear
 
-printf "\e[=3h"
+# printf "\e[=3h"
 
 cat cursor.sh
 
@@ -39,9 +42,9 @@ cat cursor.sh
 x=0
 # 行数
 y=0
-# 设置文本编辑范围
-screen_x=40
-screen_y=40
+# # 设置文本编辑范围
+# screen_x=40
+# screen_y=40
 
 MoveCursor
 while [ 1 ]
@@ -58,6 +61,8 @@ do
         Left;;
     $'\E'*)
         Esc;;
+    $'\n'*)
+        Enter;;
     *)
         clear
         echo "Sorry, wrong selection";;
