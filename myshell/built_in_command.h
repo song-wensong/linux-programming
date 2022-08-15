@@ -27,5 +27,6 @@ int myshell_set(char **args);// set命令
 int myshell_test(char **args);// test命令
 int myshell_time(char **args);// time命令
 int myshell_umask(char **args);// umask命令
+int myshell_environ(char **args);// envirom命令
 
 #endif

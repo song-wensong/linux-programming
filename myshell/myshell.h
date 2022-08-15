@@ -13,7 +13,7 @@
 #define COMMAND_BUFSIZE 256
 
 void TypePrompt(void);// 在屏幕上显示提示符
-char *ReadCommand(void);// 从键盘读取命令
+char *ReadCommand(FILE *fp);// 从键盘读取命令
 char **ParseCommand(char *cmdLine);// 词法分析，分离参数
 int ExecuteCommand(char **cmd);// 执行命令
 int ExternalCmd(char **args);// 外部命令

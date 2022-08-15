@@ -1,9 +1,4 @@
-built_in_command.c
-built_in_command.h
-built_in_command.o
-Makefile
-myshell
-myshell.c
-myshell.h
-myshell.o
-temp
+who
+date
+pwd
+ls

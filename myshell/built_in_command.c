@@ -85,7 +85,7 @@ int myshell_exec(char **args) {
         // 没有参数
     }
     else if (args[2] == NULL) {// 一个参数
-        if (execvp(args[1], args) == -1) {// 执行失败
+        if (execvp(args[1], args + 1) == -1) {// 执行失败
             fprintf(stderr, "myshell: exec: %s: not found\n", args[1]);// 输出错误提示信息
         }
     }
@@ -128,7 +128,6 @@ int myshell_pwd(char **args) {
  * @return int 
  */
 int myshell_set(char **args) {
-    printf("set\n");
     extern char **environ;// 环境指针
     for (int i = 0; environ[i] != NULL; i++) {
         printf("%s\n", environ[i]);
@@ -156,7 +155,7 @@ int myshell_test(char **args) {
     else if (args[3] != NULL && args[4] == NULL) {// 3个参数
         // 字符串比较
         // 字符串是否相等
-        if (strcmp(args[2], "-eq") == 0 || strcmp(args[2], "==") == 0)
+        if (strcmp(args[2], "-eq") == 0 || strcmp(args[2], "=") == 0)
             if (strcmp(args[1], args[3]) == 0)
                 printf("true\n");
             else
@@ -279,4 +278,15 @@ int myshell_umask(char **args) {
         }
     }
     return 1;// 继续执行
+}
+/**
+ * @brief 查看环境变量
+ * 
+ */
+int myshell_environ(char **args) {
+    extern char **environ;// 环境指针
+    for (int i = 0; environ[i] != NULL; i++) {
+        printf("%s\n", environ[i]);// 遍历输出环境变量
+    }
+    return 1;
 }
